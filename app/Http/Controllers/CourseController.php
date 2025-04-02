@@ -16,8 +16,11 @@ class CourseController extends Controller
 
     public function create_course(Request $request){
         $course = new Course();
+
         $course->name = $request->name;
         $course->description = $request->description;
+        $course->semester = $request->semester;
+        $course->credit = $request->credit;
 
         $course->save();
         return response()->json($course);
