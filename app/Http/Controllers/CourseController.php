@@ -28,7 +28,9 @@ class CourseController extends Controller
 
     public function delete_course_by_id(int $course_id){
         $selected_course = Course::where("id", "=", $course_id)->delete();
-        return response()->json(Course::all());
+        return response()->json([
+            "message" => "success"
+        ]);
     }
 
     public function update_course_by_id(Request $request, int $course_id){
