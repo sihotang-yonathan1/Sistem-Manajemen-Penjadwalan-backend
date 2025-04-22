@@ -23,3 +23,6 @@ Route::patch('/course/{course_id}', [CourseController::class, 'update_course_by_
 Route::get('/room', [RoomController::class, 'get_all_rooms']);
 Route::post('/room', [RoomController::class, 'create_room']);
 
+// Room by is
+Route::patch('/room/{room_id}', [RoomController::class, 'update_room_by_id']);
+
