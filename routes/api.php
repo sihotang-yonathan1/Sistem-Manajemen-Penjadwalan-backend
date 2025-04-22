@@ -25,4 +25,5 @@ Route::post('/room', [RoomController::class, 'create_room']);
 
 // Room by is
 Route::patch('/room/{room_id}', [RoomController::class, 'update_room_by_id']);
+Route::delete('/room/{room_id}', [RoomController::class, 'delete_room_by_id']);
 
