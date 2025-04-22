@@ -35,4 +35,13 @@ class RoomController extends Controller
         $selected_room->save();
         return response()->json($selected_room);
     }
+
+    public function delete_room_by_id(int $room_id){
+        $selected_room = Room::find($room_id);
+        $selected_room->delete();
+
+        return response()->json([
+            "message" => "Delete room success"
+        ]);
+    }
 }
