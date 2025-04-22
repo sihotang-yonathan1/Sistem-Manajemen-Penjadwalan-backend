@@ -24,8 +24,8 @@ class RoomController extends Controller
         return response()->json($room);
     }
 
-    public function update_room_by_id(Request $request, int $course_id){
-        $selected_room = Room::find($course_id);
+    public function update_room_by_id(Request $request, int $room_id){
+        $selected_room = Room::find($room_id);
 
         $selected_room->name = $request->name ?? $selected_room->name;
         $selected_room->capacity = $request->capacity ?? $selected_room->capacity ?? 0;
