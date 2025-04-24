@@ -11,9 +11,13 @@ class Course extends Model
     //
     protected $table = 'course';
     protected $fillable = [
-        "name",
-        "description",
+        "kode",
+        "nama",
         "semester",
-        "credit"
+        "sks"
     ];
+    public function lecturers()
+    {
+        return $this->belongsToMany(Lecturer::class, 'lecturer_course');
+    }
 }
