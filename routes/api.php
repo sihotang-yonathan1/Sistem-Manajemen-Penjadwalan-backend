@@ -36,11 +36,11 @@ Route::get('/course/{course_id}/lecturers', [LecturerCourseController::class, 'g
 Route::get('/lecturer/{lecturer_id}/courses', [LecturerCourseController::class, 'get_courses_for_lecturer']);
 
 
-// Room
-Route::get('/room', [RoomController::class, 'get_all_rooms']);
-Route::post('/room', [RoomController::class, 'create_room']);
+// Room routes
+Route::get('/rooms', [RoomController::class, 'get_all_rooms']);
+Route::post('/rooms', [RoomController::class, 'create_room']);
+Route::get('/rooms/{room_id}', [RoomController::class, 'get_room_by_id']);
+Route::patch('/rooms/{room_id}', [RoomController::class, 'update_room_by_id']);
+Route::delete('/rooms/{room_id}', [RoomController::class, 'delete_room_by_id']);
 
-// Room by is
-Route::patch('/room/{room_id}', [RoomController::class, 'update_room_by_id']);
-Route::delete('/room/{room_id}', [RoomController::class, 'delete_room_by_id']);
 
