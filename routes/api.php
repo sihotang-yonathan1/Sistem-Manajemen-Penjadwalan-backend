@@ -5,6 +5,7 @@ use App\Http\Controllers\LecturerController;
 use App\Http\Controllers\LecturerCourseController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\GeneratedFileController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -53,3 +54,12 @@ Route::delete('/schedules', [ScheduleController::class, 'delete_all_schedules'])
 Route::get('/schedules/day/{day}', [ScheduleController::class, 'filter_schedules_by_day']);
 Route::get('/schedules/search', [ScheduleController::class, 'search_schedules']);
 Route::get('/schedules/export', [ScheduleController::class, 'export_schedules_to_csv']);
+
+
+// Generated Files routes
+Route::get('/generated-files', [GeneratedFileController::class, 'getAllFiles']);
+Route::get('/generated-files/{id}', [GeneratedFileController::class, 'getFileDetails']);
+Route::get('/generated-files/{id}/download', [GeneratedFileController::class, 'downloadFile']);
+Route::delete('/generated-files/{id}', [GeneratedFileController::class, 'deleteFile']);
+
+

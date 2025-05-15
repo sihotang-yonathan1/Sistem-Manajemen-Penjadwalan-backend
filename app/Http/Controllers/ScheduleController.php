@@ -6,8 +6,10 @@ use App\Models\Course;
 use App\Models\Lecturer;
 use App\Models\Room;
 use App\Models\Schedule;
+use App\Models\GeneratedFile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class ScheduleController extends Controller
 {
@@ -19,6 +21,73 @@ class ScheduleController extends Controller
         ['13:00', '14:40'],
         ['14:50', '16:30']
     ];
+
+    private function saveSchedulesToCsv($schedules)
+{
+    // Prepare CSV content
+    $headers = [
+        'No',
+        'Hari',
+        'Waktu',
+        'Mata Kuliah',
+        'Semester',
+        'Dosen',
+        'Ruangan',
+    ];
+    
+    $csvContent = implode(',', $headers) . "\n";
+    
+    foreach ($schedules as $index => $schedule) {
+        $row = [
+            $index + 1,
+            $schedule['hari'],
+            $schedule['waktu'],
+            $schedule['mataKuliah'],
+            $schedule['semester'],
+            $schedule['namaDosen'],
+            $schedule['ruangan'],
+        ];
+        
+        $csvContent .= implode(',', $row) . "\n";
+    }
+    
+    // Generate filename
+    $timestamp = now()->format('Ymd_His');
+    $filename = "jadwal_kuliah_{$timestamp}.csv";
+    $filePath = "generated_files/{$filename}";
+    
+    // Save file to storage
+    Storage::put($filePath, $csvContent);
+    
+    // Get file size
+    $size = Storage::size($filePath);
+    $formattedSize = $this->formatBytes($size);
+    
+    // Create record in database
+    $generatedFile = new GeneratedFile();
+    $generatedFile->name = $filename;
+    $generatedFile->file_path = $filePath;
+    $generatedFile->size = $formattedSize;
+    $generatedFile->status = 'success';
+    $generatedFile->description = 'Jadwal kuliah yang digenerate pada ' . now()->format('d M Y H:i');
+    $generatedFile->save();
+    
+    return $generatedFile;
+}
+
+// Helper function to format bytes
+private function formatBytes($bytes, $precision = 2)
+{
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    
+    $bytes = max($bytes, 0);
+    $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+    $pow = min($pow, count($units) - 1);
+    
+    $bytes /= (1 << (10 * $pow));
+    
+    return round($bytes, $precision) . ' ' . $units[$pow];
+}
 
     // Get all schedules
     public function get_all_schedules()
@@ -359,8 +428,26 @@ class ScheduleController extends Controller
         
                 \Log::info('Schedule generation completed. Generated: ' . count($generatedSchedules) . ' schedules');
         \Log::info('Final day distribution: ' . json_encode($dayDistribution));
+
+
+
+
+
+        $generatedFile = $this->saveSchedulesToCsv($generatedSchedules);
+
         
-        return response()->json($generatedSchedules);
+        return response()->json([
+            'schedules' => $generatedSchedules,
+            'generated_file' => [
+                'id' => (string)$generatedFile->id,
+                'name' => $generatedFile->name,
+                'date' => $generatedFile->created_at->format('Y-m-d H:i:s'),
+                'size' => $generatedFile->size
+            ]
+        ]);
+
+
+
     } catch (\Exception $e) {
         \Log::error('Schedule generation failed: ' . $e->getMessage());
         \Log::error('Stack trace: ' . $e->getTraceAsString());
@@ -371,12 +458,6 @@ class ScheduleController extends Controller
         ], 500);
     }
 }
-
-
-
-
-
-
 
     // Delete a schedule
     public function delete_schedule(int $schedule_id)
