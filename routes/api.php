@@ -6,6 +6,7 @@ use App\Http\Controllers\LecturerCourseController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\GeneratedFileController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -61,5 +62,19 @@ Route::get('/generated-files', [GeneratedFileController::class, 'getAllFiles']);
 Route::get('/generated-files/{id}', [GeneratedFileController::class, 'getFileDetails']);
 Route::get('/generated-files/{id}/download', [GeneratedFileController::class, 'downloadFile']);
 Route::delete('/generated-files/{id}', [GeneratedFileController::class, 'deleteFile']);
+
+
+// Notification routes
+Route::get('/notifications', [NotificationController::class, 'getAllNotifications']);
+Route::get('/notifications/unread', [NotificationController::class, 'getUnreadNotifications']);
+Route::patch('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+Route::delete('/notifications/{id}', [NotificationController::class, 'deleteNotification']);
+Route::delete('/notifications', [NotificationController::class, 'deleteAllNotifications']);
+Route::post('/notifications/schedule', [NotificationController::class, 'createScheduleNotification']);
+Route::post('/notifications', [NotificationController::class, 'createNotification']);
+
+
+
 
 

@@ -22,59 +22,6 @@ class ScheduleController extends Controller
         ['14:50', '16:30']
     ];
 
-    private function saveSchedulesToCsv($schedules)
-{
-    // Prepare CSV content
-    $headers = [
-        'No',
-        'Hari',
-        'Waktu',
-        'Mata Kuliah',
-        'Semester',
-        'Dosen',
-        'Ruangan',
-    ];
-    
-    $csvContent = implode(',', $headers) . "\n";
-    
-    foreach ($schedules as $index => $schedule) {
-        $row = [
-            $index + 1,
-            $schedule['hari'],
-            $schedule['waktu'],
-            $schedule['mataKuliah'],
-            $schedule['semester'],
-            $schedule['namaDosen'],
-            $schedule['ruangan'],
-        ];
-        
-        $csvContent .= implode(',', $row) . "\n";
-    }
-    
-    // Generate filename
-    $timestamp = now()->format('Ymd_His');
-    $filename = "jadwal_kuliah_{$timestamp}.csv";
-    $filePath = "generated_files/{$filename}";
-    
-    // Save file to storage
-    Storage::put($filePath, $csvContent);
-    
-    // Get file size
-    $size = Storage::size($filePath);
-    $formattedSize = $this->formatBytes($size);
-    
-    // Create record in database
-    $generatedFile = new GeneratedFile();
-    $generatedFile->name = $filename;
-    $generatedFile->file_path = $filePath;
-    $generatedFile->size = $formattedSize;
-    $generatedFile->status = 'success';
-    $generatedFile->description = 'Jadwal kuliah yang digenerate pada ' . now()->format('d M Y H:i');
-    $generatedFile->save();
-    
-    return $generatedFile;
-}
-
 // Helper function to format bytes
 private function formatBytes($bytes, $precision = 2)
 {
@@ -414,7 +361,7 @@ private function formatBytes($bytes, $precision = 2)
             
             // Then by day (using a custom order)
             $dayOrder = ['Senin' => 1, 'Selasa' => 2, 'Rabu' => 3, 'Kamis' => 4, 'Jumat' => 5];
-            $dayA = $dayOrder[$a['hari']] ?? 0;
+                        $dayA = $dayOrder[$a['hari']] ?? 0;
             $dayB = $dayOrder[$b['hari']] ?? 0;
             if ($dayA !== $dayB) {
                 return $dayA - $dayB;
@@ -426,36 +373,147 @@ private function formatBytes($bytes, $precision = 2)
             return strcmp($timeA, $timeB);
         });
         
-                \Log::info('Schedule generation completed. Generated: ' . count($generatedSchedules) . ' schedules');
+        \Log::info('Schedule generation completed. Generated: ' . count($generatedSchedules) . ' schedules');
         \Log::info('Final day distribution: ' . json_encode($dayDistribution));
 
-
-
-
-
-        $generatedFile = $this->saveSchedulesToCsv($generatedSchedules);
-
+        // Save schedules to CSV file
+        $fileName = 'jadwal_kuliah_' . date('YmdHis') . '.csv';
+        $filePath = storage_path('app/public/schedules/' . $fileName);
         
-        return response()->json([
-            'schedules' => $generatedSchedules,
-            'generated_file' => [
-                'id' => (string)$generatedFile->id,
-                'name' => $generatedFile->name,
-                'date' => $generatedFile->created_at->format('Y-m-d H:i:s'),
-                'size' => $generatedFile->size
-            ]
-        ]);
-
-
-
+        // Ensure directory exists
+        if (!file_exists(dirname($filePath))) {
+            mkdir(dirname($filePath), 0755, true);
+        }
+        
+        // Create CSV content
+        $headers = [
+            'No',
+            'Hari',
+            'Waktu',
+            'Mata Kuliah',
+            'Semester',
+            'Dosen',
+            'Ruangan'
+        ];
+        
+        $csvContent = implode(',', $headers) . "\n";
+        
+        foreach ($generatedSchedules as $index => $schedule) {
+            $row = [
+                $index + 1,
+                $schedule['hari'],
+                $schedule['waktu'],
+                $schedule['mataKuliah'],
+                $schedule['semester'],
+                $schedule['namaDosen'],
+                $schedule['ruangan']
+            ];
+            
+            $csvContent .= implode(',', $row) . "\n";
+        }
+        
+        file_put_contents($filePath, $csvContent);
+        
+        // Create a record in generated_files table if it exists
+        try {
+            if (class_exists('\App\Models\GeneratedFile')) {
+                $generatedFile = new \App\Models\GeneratedFile();
+                $generatedFile->name = $fileName;
+                $generatedFile->file_path = 'schedules/' . $fileName;
+                $generatedFile->size = filesize($filePath);
+                $generatedFile->status = 'success';
+                $generatedFile->description = 'Generated schedule file with ' . count($generatedSchedules) . ' entries';
+                $generatedFile->save();
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Could not save generated file record: ' . $e->getMessage());
+            // Continue execution even if this fails
+        }
+        
+        // Create a notification for the newly generated schedules
+        try {
+            if (class_exists('\App\Models\Notification')) {
+                $notification = new \App\Models\Notification();
+                $notification->title = 'Jadwal Baru Telah Digenerate';
+                $notification->message = 'Silahkan download file atau lihat perincian di halaman Generate Jadwal';
+                $notification->type = 'jadwal';
+                $notification->read = false;
+                $notification->related_model = 'schedule';
+                $notification->time = date('H:i');
+                $notification->date = date('Y-m-d');
+                $notification->save();
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Could not create notification: ' . $e->getMessage());
+            // Continue execution even if this fails
+        }
+        
+        return response()->json($generatedSchedules);
     } catch (\Exception $e) {
-        \Log::error('Schedule generation failed: ' . $e->getMessage());
-        \Log::error('Stack trace: ' . $e->getTraceAsString());
+        \Log::error('Failed to generate schedules: ' . $e->getMessage());
+        \Log::error($e->getTraceAsString());
         
         return response()->json([
             'message' => 'Failed to generate schedules',
             'error' => $e->getMessage()
         ], 500);
+    }
+}
+
+
+
+// Helper method to save schedules to CSV file
+private function saveSchedulesToCsv($schedules)
+{
+    try {
+        $headers = [
+            'No',
+            'Hari',
+            'Waktu',
+            'Mata Kuliah',
+            'Semester',
+            'Dosen',
+            'Ruangan'
+        ];
+        
+        $csvContent = implode(',', $headers) . "\n";
+        
+        foreach ($schedules as $index => $schedule) {
+            $row = [
+                $index + 1,
+                $schedule['hari'],
+                $schedule['waktu'],
+                $schedule['mataKuliah'],
+                $schedule['semester'],
+                $schedule['namaDosen'],
+                $schedule['ruangan']
+            ];
+            
+            $csvContent .= implode(',', $row) . "\n";
+        }
+        
+        $fileName = 'jadwal_kuliah_' . date('YmdHis') . '.csv';
+        $filePath = storage_path('app/public/schedules/' . $fileName);
+        
+        // Ensure directory exists
+        if (!file_exists(dirname($filePath))) {
+            mkdir(dirname($filePath), 0755, true);
+        }
+        
+        file_put_contents($filePath, $csvContent);
+        
+        // Create a record in generated_files table
+        $generatedFile = new \App\Models\GeneratedFile();
+        $generatedFile->name = $fileName;
+        $generatedFile->file_path = 'schedules/' . $fileName;
+        $generatedFile->size = filesize($filePath);
+        $generatedFile->status = 'success';
+        $generatedFile->save();
+        
+        return $generatedFile;
+    } catch (\Exception $e) {
+        \Log::error('Error saving schedules to CSV: ' . $e->getMessage());
+        return null;
     }
 }
 
