@@ -78,3 +78,12 @@ Route::post('/notifications', [NotificationController::class, 'createNotificatio
 
 
 
+
+// Schedule routes
+Route::get('/schedules', [ScheduleController::class, 'get_all_schedules']);
+Route::post('/schedules/generate', [ScheduleController::class, 'generate_schedules']);
+Route::delete('/schedules/{schedule_id}', [ScheduleController::class, 'delete_schedule']);
+Route::delete('/schedules', [ScheduleController::class, 'delete_all_schedules']);
+Route::get('/schedules/day/{day}', [ScheduleController::class, 'filter_schedules_by_day']);
+Route::get('/schedules/search', [ScheduleController::class, 'search_schedules']);
+Route::get('/schedules/export', [ScheduleController::class, 'export_schedules_to_csv']);
