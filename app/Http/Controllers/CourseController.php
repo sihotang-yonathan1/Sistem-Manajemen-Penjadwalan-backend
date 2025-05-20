@@ -30,10 +30,10 @@ class CourseController extends Controller
     public function create_course(Request $request){
         $course = new Course();
 
-        $course->name = $request->nama;
-        $course->code = $request->kode; // Add this column to your courses table
+        $course->nama = $request->nama;
+        $course->kode = $request->kode; // Add this column to your courses table
         $course->semester = $request->semester;
-        $course->credit = $request->sks;
+        $course->sks = $request->sks;
 
         $course->save();
         
