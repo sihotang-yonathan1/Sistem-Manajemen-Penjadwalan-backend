@@ -16,12 +16,13 @@ class LoginController extends Controller
         ]);
 
  
-
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-
+            
+            $user = Auth::user();
             return response()->json([
-                "message" => "success"
+                "message" => "success",
+                "data" => $user
             ]);
 
         }
