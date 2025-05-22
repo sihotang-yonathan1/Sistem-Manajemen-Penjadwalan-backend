@@ -6,7 +6,9 @@ use App\Http\Controllers\LecturerCourseController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\GeneratedFileController;
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RegisterController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -87,3 +89,8 @@ Route::delete('/schedules', [ScheduleController::class, 'delete_all_schedules'])
 Route::get('/schedules/day/{day}', [ScheduleController::class, 'filter_schedules_by_day']);
 Route::get('/schedules/search', [ScheduleController::class, 'search_schedules']);
 Route::get('/schedules/export', [ScheduleController::class, 'export_schedules_to_csv']);
+
+
+// Auth
+Route::post('/register', [RegisterController::class, 'register_user']);
+Route::post('/login', [LoginController::class, 'authenticate']);
