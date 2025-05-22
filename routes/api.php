@@ -94,3 +94,4 @@ Route::get('/schedules/export', [ScheduleController::class, 'export_schedules_to
 // Auth
 Route::post('/register', [RegisterController::class, 'register_user']);
 Route::post('/login', [LoginController::class, 'authenticate']);
+Route::post('/logout', [LoginController::class, 'logout']);
