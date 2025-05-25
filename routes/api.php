@@ -9,6 +9,7 @@ use App\Http\Controllers\GeneratedFileController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\StudentEnrollmentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -95,3 +96,12 @@ Route::get('/schedules/export', [ScheduleController::class, 'export_schedules_to
 Route::post('/register', [RegisterController::class, 'register_user']);
 Route::post('/login', [LoginController::class, 'authenticate']);
 Route::post('/logout', [LoginController::class, 'logout']);
+
+
+
+
+// Student enrollment routes
+Route::get('/courses/available', [StudentEnrollmentController::class, 'getAvailableCourses']);
+Route::get('/student/{userId}/courses', [StudentEnrollmentController::class, 'getStudentCourses']);
+Route::post('/student/enroll', [StudentEnrollmentController::class, 'enrollCourse']);
+Route::delete('/student/unenroll', [StudentEnrollmentController::class, 'unenrollCourse']);
