@@ -16,23 +16,37 @@ class StudentEnrollment extends Model
         'course_id',
         'semester',
         'tahun_akademik',
-        'status'
+        'status',
+        'enrollment_date'
     ];
 
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'enrollment_date' => 'datetime',
     ];
 
-    // Relasi ke User (Mahasiswa)
-    public function user()
+// Relationship with User (Student)
+    public function student()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relasi ke Course (Mata Kuliah)
+    // Relationship with Course
     public function course()
     {
-        return $this->belongsTo(Course::class);
+        return $this->belongsTo(Course::class, 'course_id');
+    }
+
+    // Scope for active enrollments
+    public function scopeActive($query)
+    {
+        return $query->where('status', 'active');
+    }
+
+    // Scope for specific student
+    public function scopeForStudent($query, $userId)
+    {
+        return $query->where('user_id', $userId);
     }
 }
