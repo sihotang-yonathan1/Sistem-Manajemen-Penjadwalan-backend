@@ -6,7 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\StudentEnrollment;
 use App\Models\Course;
 use App\Models\User;
+use App\Models\Schedule;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class StudentEnrollmentController extends Controller
 {
@@ -223,4 +225,82 @@ class StudentEnrollmentController extends Controller
             ], 500);
         }
     }
+
+    // Get student's schedule based on enrolled courses
+    public function getStudentSchedule($userId)
+    {
+        try {
+            Log::info('Getting schedule for student ID: ' . $userId);
+            
+            $user = User::find($userId);
+            
+            if (!$user) {
+                Log::warning('User not found with ID: ' . $userId);
+                return response()->json([]);
+            }
+
+            if ($user->role !== 'mahasiswa') {
+                Log::warning('User is not a student: ' . $user->role);
+                return response()->json([
+                    'message' => 'Only students can access this endpoint'
+                ], 403);
+            }
+
+            // Get enrolled courses for the student
+            $enrolledCourses = StudentEnrollment::with('course')
+                ->where('user_id', $userId)
+                ->where('status', 'active')
+                ->get()
+                ->pluck('course.nama')
+                ->toArray();
+
+            Log::info('Enrolled courses for student: ' . json_encode($enrolledCourses));
+
+            if (empty($enrolledCourses)) {
+                Log::info('No enrolled courses found for student');
+                return response()->json([]);
+            }
+
+            // Get schedules for enrolled courses
+            $schedules = Schedule::with(['lecturer', 'course', 'room'])
+                ->whereHas('course', function($query) use ($enrolledCourses) {
+                    $query->whereIn('nama', $enrolledCourses);
+                })
+                ->orderBy('day')
+                ->orderBy('start_time')
+                ->get();
+
+            Log::info('Found schedules count: ' . $schedules->count());
+
+            $transformedSchedules = $schedules->map(function($schedule) {
+                return [
+                    'id' => (string) $schedule->id,
+                    'hari' => $schedule->day,
+                    'waktu' => $schedule->start_time . ' - ' . $schedule->end_time,
+                    'mataKuliah' => $schedule->course->nama,
+                    'namaDosen' => $schedule->lecturer->nama,
+                    'ruangan' => $schedule->room->nama,
+                    'semester' => (string) $schedule->course->semester,
+                    'kode' => $schedule->course->kode ?? '',
+                ];
+            });
+
+            $result = $transformedSchedules->toArray();
+            Log::info('Returning ' . count($result) . ' schedules');
+            
+            return response()->json($result, 200, [
+                'Content-Type' => 'application/json',
+                'Cache-Control' => 'no-cache, no-store, must-revalidate'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error in getStudentSchedule: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return response()->json([], 200, [
+                'Content-Type' => 'application/json'
+            ]);
+        }
+    }
+
 }
