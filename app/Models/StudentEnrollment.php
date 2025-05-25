@@ -17,7 +17,8 @@ class StudentEnrollment extends Model
         'semester',
         'tahun_akademik',
         'status',
-        'enrollment_date'
+        'enrollment_date',
+        'lecturer_id'
     ];
 
     protected $casts = [
@@ -36,6 +37,11 @@ class StudentEnrollment extends Model
     public function course()
     {
         return $this->belongsTo(Course::class, 'course_id');
+    }
+
+    public function lecturer()
+    {
+        return $this->belongsTo(Lecturer::class, 'lecturer_id');
     }
 
     // Scope for active enrollments
