@@ -65,10 +65,10 @@ class CourseController extends Controller
         }
         
         // Update fields
-        $selected_course->code = $request->kode ?? $selected_course->code;
-        $selected_course->name = $request->nama ?? $selected_course->name;
+        $selected_course->kode = $request->kode ?? $selected_course->code;
+        $selected_course->nama = $request->nama ?? $selected_course->name;
         $selected_course->semester = $request->semester ?? $selected_course->semester;
-        $selected_course->credit = $request->sks ?? $selected_course->credit;
+        $selected_course->sks = $request->sks ?? $selected_course->sks;
 
         $selected_course->save();
 
