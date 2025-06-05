@@ -52,4 +52,12 @@ class LoginController extends Controller
             "message" => "Successfully logout"
         ], 200);
     }
+
+    public function get_current_user(Request $request){
+        $user = Auth::user();
+        return response()->json([
+            "message" => "ok",
+            "data" => $user,
+        ]);
+    }
 }
