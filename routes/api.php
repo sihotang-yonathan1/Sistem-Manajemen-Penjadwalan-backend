@@ -82,3 +82,7 @@ Route::get('/student/{userId}/courses', [StudentEnrollmentController::class, 'ge
 Route::get('/student/{userId}/schedule', [StudentEnrollmentController::class, 'getStudentSchedule']);
 Route::post('/student/enroll', [StudentEnrollmentController::class, 'enrollCourse']);
 Route::delete('/student/unenroll', [StudentEnrollmentController::class, 'unenrollCourse']);
+
+// User Info
+Route::get('/me', [LoginController::class, 'get_current_user']);
+
